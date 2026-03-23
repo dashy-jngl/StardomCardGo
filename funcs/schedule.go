@@ -86,7 +86,7 @@ func ParseCard(url string) (MatchCard, error) {
 }
 
 func GetCardLinksTwoMonths() ([]string, error) {
-    baseURL := "https://wwr-stardom.com/schedule"
+    baseURL := "https://wwr-stardom.com/schedule/"
 
     resp, err := http.Get(baseURL)
     if err != nil {
@@ -100,7 +100,28 @@ func GetCardLinksTwoMonths() ([]string, error) {
     }
 
     links := extractCardLinks(doc, baseURL)
+
+        doc.Find("a.calendar_btn_next").First().Each(func(_ int, s *goquery.Selection) {
+        if href, exists := s.Attr("href"); exists {
+            ref, _ := url.Parse(href)
+            base, _ := url.Parse(baseURL)
+            nextURL := base.ResolveReference(ref)
+            resp2, err := http.Get(nextURL.String())
+            if err != nil {
+                return
+            }
+            defer resp2.Body.Close()
+            doc2, err := goquery.NewDocumentFromReader(resp2.Body)
+            if err != nil {
+                return
+            }
+            moreLinks := extractCardLinks(doc2, nextURL.String())
+            links = append(links, moreLinks...)
+        }
+    })
     return links, nil
+
+
 }
 
 func extractCardLinks(doc *goquery.Document, baseURL string) []string {
@@ -119,5 +140,5 @@ func extractCardLinks(doc *goquery.Document, baseURL string) []string {
             }
         }
     })
-    return links
+    return links    
 }
