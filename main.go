@@ -4,13 +4,18 @@ import (
 	"stardomcard/funcs"
 )
 
-func main() {
-	matchCard, _ := funcs.ParseCard("https://wwr-stardom.com/event/20260325/")
+var testLinks = []string{"https://wwr-stardom.com/event/20260325/"}
+
+func printLinks() {
 	links, _ := funcs.GetCardLinksTwoMonths()
 	for _, link := range links {
 		println(link)
 	}
-	overrides, _ := funcs.FetchNameOverrides()
+}
+
+func testOverrides() {
+	matchCard, _ := funcs.ParseCard(testLinks[0])
+	overrides, _ := funcs.FetchNameOverrides()	
 	for _, match := range matchCard.Matches {
 		for _, team := range match.Teams {
 			for _, wrestler := range team {
@@ -21,4 +26,23 @@ func main() {
 			}
 		}
 	}
+}
+
+func testTranslation() {
+	original := "スターダム女子プロレス - 6人タッグマッチ"
+	translated, err := funcs.TranslateGoogle(original)
+	if err != nil {
+		println("Translation error:", err.Error())
+	} else {
+		println("Original:", original)
+		println("Translated:", translated)
+	}
+}
+
+func main() {
+	// matchCard, _ := funcs.ParseCard(testLinks[0])
+	printLinks()
+	// testOverrides()
+	testTranslation()
+
 }
