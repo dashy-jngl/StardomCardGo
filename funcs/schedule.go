@@ -3,6 +3,7 @@ package funcs
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -82,4 +83,41 @@ func ParseCard(url string) (MatchCard, error) {
 		}
 	}
 	return MatchCard{Title: title, Date: date, Matches: matches}, nil
+}
+
+func GetCardLinksTwoMonths() ([]string, error) {
+    baseURL := "https://wwr-stardom.com/schedule"
+
+    resp, err := http.Get(baseURL)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+
+    doc, err := goquery.NewDocumentFromReader(resp.Body)
+    if err != nil {
+        return nil, err
+    }
+
+    links := extractCardLinks(doc, baseURL)
+    return links, nil
+}
+
+func extractCardLinks(doc *goquery.Document, baseURL string) []string {
+    var links []string
+    base, _ := url.Parse(baseURL)
+
+    doc.Find("a.btn").Each(func(_ int, s *goquery.Selection) {
+        text := strings.TrimSpace(s.Text())
+        if text == "対戦カード" {
+            if href, exists := s.Attr("href"); exists {
+                ref, err := url.Parse(href)
+                if err == nil {
+                    fullURL := base.ResolveReference(ref)
+                    links = append(links, fullURL.String())
+                }
+            }
+        }
+    })
+    return links
 }
