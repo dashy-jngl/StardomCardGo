@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"stardomcard/funcs"
 )
 
@@ -15,7 +16,7 @@ func printLinks() {
 
 func testOverrides() {
 	matchCard, _ := funcs.ParseCard(testLinks[0])
-	overrides, _ := funcs.FetchNameOverrides()	
+	overrides, _ := funcs.FetchNameOverrides()
 	for _, match := range matchCard.Matches {
 		for _, team := range match.Teams {
 			for _, wrestler := range team {
@@ -40,9 +41,11 @@ func testTranslation() {
 }
 
 func main() {
-	// matchCard, _ := funcs.ParseCard(testLinks[0])
+	matchCard, _ := funcs.ParseCard(testLinks[0])
 	printLinks()
 	// testOverrides()
-	testTranslation()
-
+	// testTranslation()
+	overrides, _ := funcs.FetchNameOverrides()
+	funcs.TranslateCard(&matchCard, overrides)
+	fmt.Println(matchCard)
 }
