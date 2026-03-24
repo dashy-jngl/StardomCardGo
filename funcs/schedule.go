@@ -1,7 +1,6 @@
 package funcs
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -72,16 +71,6 @@ func ParseCard(url string) (MatchCard, error) {
 
 		}
 	})
-
-	// Debug output
-	fmt.Println("Title:", title)
-	fmt.Println("Date:", date)
-	for _, match := range matches {
-		fmt.Println("Match Type:", match.MatchType)
-		for i, team := range match.Teams {
-			fmt.Printf("  Team %d: %s\n", i+1, strings.Join(team, ", "))
-		}
-	}
 	return MatchCard{Title: title, Date: date, Matches: matches}, nil
 }
 
