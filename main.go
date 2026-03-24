@@ -12,7 +12,7 @@ func main() {
 	date := flag.String("d", "", "Date in (YYYYMMDD)")
 	compact := flag.Bool("c", false, "Compact display")
 	vsStyle := flag.Int("vs", 1, "VS Icon Style (1-3)")
-	style := flag.Int("s", 3, "Table Style (1-4)")
+	style := flag.Int("s", 2, "Table Style (1-4)")
 	english := flag.Bool("e", false, "Translate to English")
 	list := flag.Bool("l", false, "List cards for the next 2 months")
 	n := flag.Int("n", 1, "nth card to display (default 1, ignored if -l is set)")
