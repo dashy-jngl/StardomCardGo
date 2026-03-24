@@ -92,7 +92,7 @@ func topParts(lenTeams int, widths map[int]int, style int, vs, matchType string)
 	fmt.Println(centerLine(borderstyle[0] + strings.Join(topParts, borderstyle[1]) + borderstyle[2]))
 }
 
-func midRow(teams [][]string, rows int, widths map[int]int, vsW int, borderstyle []string){
+func midRow(teams [][]string, rows int, widths map[int]int, vsW int, borderstyle []string, vsStyle int){
 	midRow := rows / 2
 	for r := 0; r < rows; r++ {
 		var rowParts []string
@@ -105,7 +105,7 @@ func midRow(teams [][]string, rows int, widths map[int]int, vsW int, borderstyle
 			if i < len(teams)-1 {
 				sep := ""
 				if r == midRow {
-					sep = vsIcons[1]
+					sep = vsIcons[vsStyle]
 				}
 				rowParts = append(rowParts,padCenter(sep, vsW))
 			}
@@ -152,7 +152,7 @@ func PrintMatchTable(matchType string, teams [][]string, style,vsStyle int,) {
 	//top border
 	topParts(n, widths, style, vsIcons[vsStyle], matchType)
 	//rows
-	midRow(teams, rows, widths, vsW, borderChars[style])
+	midRow(teams, rows, widths, vsW, borderChars[style], vsStyle)
 	//bottom border
 	bottomParts(n, widths, style, vsIcons[vsStyle])
 }
@@ -186,7 +186,7 @@ func PrintCompact(card *MatchCard, vsStyle int) {
 		for _, t := range m.Teams {
 			teamStrs = append(teamStrs, strings.Join(t, ", "))
 		}
-		fmt.Printf("%d. %s: %s\n", i+1, m.MatchType, strings.Join(teamStrs, fmt.Sprintf(" %s ", vsIcons[1])))
+		fmt.Printf("%d. %s: %s\n", i+1, m.MatchType, strings.Join(teamStrs, fmt.Sprintf(" %s ", vsIcons[vsStyle])))
 	}
 
 }
