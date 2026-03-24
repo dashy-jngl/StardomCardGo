@@ -5,6 +5,7 @@ go 1.26.1
 require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/mattn/go-runewidth v0.0.21
+	golang.org/x/sync v0.10.0
 	golang.org/x/term v0.41.0
 )
 

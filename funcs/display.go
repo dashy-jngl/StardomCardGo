@@ -9,8 +9,8 @@ import (
 	"golang.org/x/term"
 )
 
-var vsIcons = []string{" vs "," ⚔️ ", " ⚔ ", " 🆚 ", }
-var borderChars = [][]string{{"┌","┬", "┐", "└","┴", "┘", "─", "│"}, {"╔","╦", "╗", "╚","╩", "╝", "═", "║"}, {"┏", "┳", "┓", "┗","┻", "┛", "━", "┃"}, {"╭","─", "╮", "╰","─","╯", "─", "│"}, {"╒", "╤", "╕", "╘","╧", "╛", "═", "│"}}
+var vsIcons = []string{" vs ", " ⚔ ", " 🆚 "}
+var borderChars = [][]string{{"┌", "┬", "┐", "└", "┴", "┘", "─", "│"}, {"╔", "╦", "╗", "╚", "╩", "╝", "═", "║"}, {"┏", "┳", "┓", "┗", "┻", "┛", "━", "┃"}, {"╭", "─", "╮", "╰", "─", "╯", "─", "│"}, {"╒", "╤", "╕", "╘", "╧", "╛", "═", "│"}}
 
 func termWidth() int {
 	w, _, err := term.GetSize(int(os.Stdout.Fd()))
@@ -21,7 +21,7 @@ func termWidth() int {
 }
 
 func centerLine(line string) string {
-	w:= termWidth()
+	w := termWidth()
 	lineW := runewidth.StringWidth(line)
 	if lineW >= w {
 		return line // No centering if line is wider than terminal
@@ -44,14 +44,14 @@ func padCenter(text string, width int) string {
 func PrintHeader(card *MatchCard) {
 	fmt.Println()
 	var parts []string
-	if card.Time != "" {
-		parts = append(parts, card.Time)
-	}
 	if card.Date != "" {
 		parts = append(parts, card.Date)
 	}
+	if card.Time != "" {
+		parts = append(parts, card.Time)
+	}
 	if len(parts) > 0 {
-		fmt.Println(centerLine(strings.Join(parts, " ~ ")))
+		fmt.Println(centerLine(strings.Join(parts, "~ ")))
 	}
 	fmt.Println(centerLine(fmt.Sprintf("『%s』", card.Title)))
 	fmt.Println()
@@ -66,7 +66,7 @@ func maxRows(teams [][]string) int {
 	}
 	return rows
 }
-func colWidth(teams [][]string,) map[int]int {
+func colWidth(teams [][]string) map[int]int {
 	widths := make(map[int]int)
 	for i, team := range teams {
 		for _, name := range team {
@@ -79,20 +79,20 @@ func colWidth(teams [][]string,) map[int]int {
 	return widths
 }
 
-func topParts(lenTeams int, widths map[int]int, style int, vs, matchType string) {
+func topParts(lenTeams int, widths map[int]int, style, vsW int, vs, matchType string) {
 	borderstyle := borderChars[style]
 	var topParts []string
 	for i := 0; i < lenTeams; i++ {
 		topParts = append(topParts, strings.Repeat(borderstyle[6], widths[i]))
 		if i < lenTeams-1 {
-			topParts = append(topParts, strings.Repeat(borderstyle[6], runewidth.StringWidth(vs)))
+			topParts = append(topParts, strings.Repeat(borderstyle[6], vsW))
 		}
 	}
 	fmt.Println(centerLine(matchType))
 	fmt.Println(centerLine(borderstyle[0] + strings.Join(topParts, borderstyle[1]) + borderstyle[2]))
 }
 
-func midRow(teams [][]string, rows int, widths map[int]int, vsW int, borderstyle []string, vsStyle int){
+func midRow(teams [][]string, rows int, widths map[int]int, vsW int, borderstyle []string, vs string) {
 	midRow := rows / 2
 	for r := 0; r < rows; r++ {
 		var rowParts []string
@@ -105,35 +105,35 @@ func midRow(teams [][]string, rows int, widths map[int]int, vsW int, borderstyle
 			if i < len(teams)-1 {
 				sep := ""
 				if r == midRow {
-					sep = vsIcons[vsStyle]
+					sep = vs
 				}
-				rowParts = append(rowParts,padCenter(sep, vsW))
+				rowParts = append(rowParts, padCenter(sep, vsW))
 			}
 		}
 		fmt.Println(centerLine(borderstyle[7] + strings.Join(rowParts, borderstyle[7]) + borderstyle[7]))
 	}
 }
 
-func bottomParts(lenTeams int, widths map[int]int, style int, vs string) {
+func bottomParts(lenTeams int, widths map[int]int, style, vsW int, vs string) {
 	borderstyle := borderChars[style]
 	var bottomParts []string
 	for i := 0; i < lenTeams; i++ {
 		bottomParts = append(bottomParts, strings.Repeat(borderstyle[6], widths[i]))
 		if i < lenTeams-1 {
-			bottomParts = append(bottomParts, strings.Repeat(borderstyle[6], runewidth.StringWidth(vs)))
+			bottomParts = append(bottomParts, strings.Repeat(borderstyle[6], vsW))
 		}
 	}
 	fmt.Println(centerLine(borderstyle[3] + strings.Join(bottomParts, borderstyle[4]) + borderstyle[5]))
 }
 
-func PrintMatchTable(matchType string, teams [][]string, style,vsStyle int,) {
+func PrintMatchTable(matchType string, teams [][]string, style, vsStyle int) {
 
 	for i, team := range teams {
 		for j, name := range team {
 			teams[i][j] = " " + name + " "
 		}
 	}
-	n:= len(teams)
+	n := len(teams)
 	if n == 0 {
 		return
 	}
@@ -150,17 +150,17 @@ func PrintMatchTable(matchType string, teams [][]string, style,vsStyle int,) {
 	vsW := runewidth.StringWidth(vsIcons[vsStyle])
 
 	//top border
-	topParts(n, widths, style, vsIcons[vsStyle], matchType)
+	topParts(n, widths, style, vsW, vsIcons[vsStyle], matchType)
 	//rows
-	midRow(teams, rows, widths, vsW, borderChars[style], vsStyle)
+	midRow(teams, rows, widths, vsW, borderChars[style], vsIcons[vsStyle])
 	//bottom border
-	bottomParts(n, widths, style, vsIcons[vsStyle])
+	bottomParts(n, widths, style, vsW, vsIcons[vsStyle])
 }
 
 func PrintVerboseCard(card *MatchCard, style, vsStyle int) {
 	PrintHeader(card)
-	for i, m:= range card.Matches {
-		header:= fmt.Sprintf("Match %d: %s", i+1, m.MatchType)
+	for i, m := range card.Matches {
+		header := fmt.Sprintf("Match %d: %s", i+1, m.MatchType)
 		PrintMatchTable(header, m.Teams, style, vsStyle)
 	}
 }
@@ -180,8 +180,8 @@ func PrintCompact(card *MatchCard, vsStyle int) {
 		fmt.Println(strings.Join(title, " ~ "))
 		fmt.Println()
 	}
-	
-	for i, m:= range card.Matches {
+
+	for i, m := range card.Matches {
 		var teamStrs []string
 		for _, t := range m.Teams {
 			teamStrs = append(teamStrs, strings.Join(t, ", "))

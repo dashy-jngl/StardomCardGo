@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/sync/errgroup"
 )
 
 type Match struct {
@@ -17,32 +18,54 @@ type MatchCard struct {
 	Matches           []Match
 }
 
-func ParseCard(url string) (MatchCard, error) {
-	// Make an HTTP GET request to the URL
-	resp, err := http.Get(url)
-	if err != nil {
-		return MatchCard{}, err
-	}
-	defer resp.Body.Close()
+func ParseCard(cardUrl string) (MatchCard, error) {
 
-	// Check if the request was successful
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
+	//url for time:
+	timeUrl := strings.Replace(cardUrl, "event", "schedule", 1)
+
+	var cardDoc, timeDoc *goquery.Document
+	g := new(errgroup.Group)
+	//fetch event page
+	g.Go(func() error {
+		resp, err := http.Get(cardUrl)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		cardDoc, err = goquery.NewDocumentFromReader(resp.Body)
+		return err
+	})
+	//fetch schedule page
+	g.Go(func() error {
+		resp, err := http.Get(timeUrl)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		timeDoc, err = goquery.NewDocumentFromReader(resp.Body)
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
 		return MatchCard{}, err
 	}
 
 	// Extract the title of the match card
-	title := doc.Find("h1.match_head_title").First().Text()
+	title := cardDoc.Find("h1.match_head_title").First().Text()
 	title = strings.TrimSpace(title)
 
 	// Extract the date of the match card
-	date := doc.Find("p.date").First().Text()
+	date := cardDoc.Find("p.date").First().Text()
 	date = strings.TrimSpace(date)
+
+	// Extract the Time
+	time := timeDoc.Find("span.time").Eq(2).Text()
+	time = strings.TrimSpace(time)
 
 	// Extract the matches
 	var matches []Match
 
-	doc.Find("div.match_wrap").Each(func(i int, wrap *goquery.Selection) {
+	cardDoc.Find("div.match_wrap").Each(func(i int, wrap *goquery.Selection) {
 		matchType := strings.TrimSpace(wrap.Find("h2.sub_content_title1").Text())
 
 		row := wrap.Find("div.match_block_row")
@@ -71,63 +94,62 @@ func ParseCard(url string) (MatchCard, error) {
 
 		}
 	})
-	return MatchCard{Title: title, Date: date, Matches: matches}, nil
+	return MatchCard{Title: title, Date: date, Time: time, Matches: matches}, nil
 }
 
 func GetCardLinksTwoMonths() ([]string, error) {
-    baseURL := "https://wwr-stardom.com/schedule/"
+	baseURL := "https://wwr-stardom.com/schedule/"
 
-    resp, err := http.Get(baseURL)
-    if err != nil {
-        return nil, err
-    }
-    defer resp.Body.Close()
+	resp, err := http.Get(baseURL)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
 
-    doc, err := goquery.NewDocumentFromReader(resp.Body)
-    if err != nil {
-        return nil, err
-    }
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 
-    links := extractCardLinks(doc, baseURL)
+	links := extractCardLinks(doc, baseURL)
 
-        doc.Find("a.calendar_btn_next").First().Each(func(_ int, s *goquery.Selection) {
-        if href, exists := s.Attr("href"); exists {
-            ref, _ := url.Parse(href)
-            base, _ := url.Parse(baseURL)
-            nextURL := base.ResolveReference(ref)
-            resp2, err := http.Get(nextURL.String())
-            if err != nil {
-                return
-            }
-            defer resp2.Body.Close()
-            doc2, err := goquery.NewDocumentFromReader(resp2.Body)
-            if err != nil {
-                return
-            }
-            moreLinks := extractCardLinks(doc2, nextURL.String())
-            links = append(links, moreLinks...)
-        }
-    })
-    return links, nil
-
+	doc.Find("a.calendar_btn_next").First().Each(func(_ int, s *goquery.Selection) {
+		if href, exists := s.Attr("href"); exists {
+			ref, _ := url.Parse(href)
+			base, _ := url.Parse(baseURL)
+			nextURL := base.ResolveReference(ref)
+			resp2, err := http.Get(nextURL.String())
+			if err != nil {
+				return
+			}
+			defer resp2.Body.Close()
+			doc2, err := goquery.NewDocumentFromReader(resp2.Body)
+			if err != nil {
+				return
+			}
+			moreLinks := extractCardLinks(doc2, nextURL.String())
+			links = append(links, moreLinks...)
+		}
+	})
+	return links, nil
 
 }
 
 func extractCardLinks(doc *goquery.Document, baseURL string) []string {
-    var links []string
-    base, _ := url.Parse(baseURL)
+	var links []string
+	base, _ := url.Parse(baseURL)
 
-    doc.Find("a.btn").Each(func(_ int, s *goquery.Selection) {
-        text := strings.TrimSpace(s.Text())
-        if text == "対戦カード" {
-            if href, exists := s.Attr("href"); exists {
-                ref, err := url.Parse(href)
-                if err == nil {
-                    fullURL := base.ResolveReference(ref)
-                    links = append(links, fullURL.String())
-                }
-            }
-        }
-    })
-    return links    
+	doc.Find("a.btn").Each(func(_ int, s *goquery.Selection) {
+		text := strings.TrimSpace(s.Text())
+		if text == "対戦カード" {
+			if href, exists := s.Attr("href"); exists {
+				ref, err := url.Parse(href)
+				if err == nil {
+					fullURL := base.ResolveReference(ref)
+					links = append(links, fullURL.String())
+				}
+			}
+		}
+	})
+	return links
 }

@@ -9,23 +9,25 @@ import (
 
 func main() {
 
-	date:= flag.String("d", "", "Date in (YYYYMMDD)")
-	compact:= flag.Bool("c", false, "Compact display")
-	vsStyle:= flag.Int("vs", 1, "VS Icon Style (0-3)")
-	style:= flag.Int("s", 2, "Table Style (0-4)")
-	english:= flag.Bool("e", false, "Translate to English")
-	list:= flag.Bool("l", false, "List cards for the next 2 months")
-	n:= flag.Int("n", 1, "nth card to display (default 1, ignored if -l is set)")
+	date := flag.String("d", "", "Date in (YYYYMMDD)")
+	compact := flag.Bool("c", false, "Compact display")
+	vsStyle := flag.Int("vs", 1, "VS Icon Style (1-3)")
+	style := flag.Int("s", 3, "Table Style (1-4)")
+	english := flag.Bool("e", false, "Translate to English")
+	list := flag.Bool("l", false, "List cards for the next 2 months")
+	n := flag.Int("n", 1, "nth card to display (default 1, ignored if -l is set)")
 	flag.Parse()
 
-	if *style < 0 || *style > 4 {
-		fmt.Println("Invalid style. Please choose between 0 and 4.")
+	if *style < 1 || *style > 4 {
+		fmt.Println("Invalid style. Please choose between 1 and 4.")
 		os.Exit(1)
 	}
-	if *vsStyle < 0 || *vsStyle > 3 {
-		fmt.Println("Invalid VS style. Please choose between 0 and 3.")
+	if *vsStyle < 1 || *vsStyle > 3 {
+		fmt.Println("Invalid VS style. Please choose between 1 and 3.")
 		os.Exit(1)
 	}
+	selectedStyle := *style - 1
+	selectedVs := *vsStyle - 1
 
 	if *list {
 		links, err := funcs.GetCardLinksTwoMonths()
@@ -69,7 +71,7 @@ func main() {
 		fmt.Println("Error parsing card:", err)
 		os.Exit(1)
 	}
-	
+
 	if *english {
 		overrides, err := funcs.FetchNameOverrides()
 		if err != nil {
@@ -80,9 +82,9 @@ func main() {
 	}
 
 	if *compact {
-		funcs.PrintCompact(&card, *vsStyle)
+		funcs.PrintCompact(&card, *&selectedVs)
 	} else {
-		funcs.PrintVerboseCard(&card, *style, *vsStyle)
+		funcs.PrintVerboseCard(&card, *&selectedStyle, *&selectedVs)
 	}
 	// matchCard, _ := funcs.ParseCard(funcs.TestLinks[0])
 	// funcs.PrintLinks()
