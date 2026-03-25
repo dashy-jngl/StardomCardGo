@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	fmt.Print("\033[H\033[2J")
 
 	date := flag.String("d", "", "Date in (YYYYMMDD)")
 	compact := flag.Bool("c", false, "Compact display")
@@ -65,7 +66,6 @@ func main() {
 		}
 		url = links[*n-1]
 	}
-
 	card, err := funcs.ParseCard(url)
 	if err != nil {
 		fmt.Println("Error parsing card:", err)
@@ -80,7 +80,7 @@ func main() {
 		}
 		funcs.TranslateCard(&card, overrides)
 	}
-
+	
 	if *compact {
 		funcs.PrintCompact(&card, *&selectedVs)
 	} else {
